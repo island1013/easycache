@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<!--对属性分组，将一组相关的配置，放在一起 -->
+
+
+
+	<group name="WSDL Location" description="WSDL Location">
+		<property name="funds.stat.query.service.address.url"
+			defaultValue="http://10.132.19.12:8093/ffs/cxf-service/statQueryService?wsdl" />
+	</group>
+</config>

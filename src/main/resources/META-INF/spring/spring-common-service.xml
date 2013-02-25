@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:osgi="http://www.springframework.org/schema/osgi"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/osgi http://www.springframework.org/schema/osgi/spring-osgi.xsd 
+         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+         http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd"
+	default-autowire="byName">
+    
+    <import resource="classpath:META-INF/cxf/cxf-extension-soap.xml" />
+
+    <context:annotation-config />
+    
+    <context:component-scan base-package="com.shengpay.website.common.service.impl" />
+        
+        
+    <!-- ws服务 -->
+    <bean id="fundsStatQueryService" class="com.sdo.ffs.service.facade.query.FundsStatQueryService"
+        factory-bean="fundsStatQueryServiceFactory" factory-method="create"
+        lazy-init="true" />
+
+    <bean id="fundsStatQueryServiceFactory" class="org.apache.cxf.jaxws.JaxWsProxyFactoryBean"
+        lazy-init="true">
+        <property name="serviceClass" value="com.sdo.ffs.service.facade.query.FundsStatQueryService" />
+        <property name="address" value="${funds.stat.query.service.address.url}" />
+    </bean>
+
+	<bean id="cacheMethodInterceptor"
+		class="com.shengpay.website.common.service.cache.CacheMethodInterceptor"></bean>
+
+	<bean id="annotationAutoProxyCreator"
+		class="com.shengpay.website.common.service.cache.AnnotationAutoProxyCreator">
+		<property name="interceptorNames">
+			<value>cacheMethodInterceptor</value>
+		</property>
+	</bean>
+
+	<bean id="localCacheRefresherJob"
+		class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<property name="targetObject">
+			<ref bean="cacheMethodInterceptor" />
+		</property>
+		<property name="targetMethod">
+			<value>refresh</value>
+		</property>
+		<property name="concurrent">
+			<value>false</value>
+		</property>
+	</bean>
+
+	<bean id="localCacheRefresherTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail">
+			<ref bean="localCacheRefresherJob" />
+		</property>
+		<property name="cronExpression">
+			<value>0 0/15 * * * ?</value>
+		</property>
+	</bean>
+
+</beans>
+
